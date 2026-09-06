@@ -256,23 +256,17 @@ def og_image():
 
 @app.route("/sitemap.xml")
 def sitemap_xml():
+        # Clean sitemap: only URLs that serve the new SPA design and return 200.
+        # Old landing pages now 301 to SPA sections, so they are intentionally excluded.
         _today = _dt.date.today().isoformat()
-        pages = ["", "services", "fleet", "book", "blog", "flight-status", "contact", "faq", "policy", "deposit"]
-        seo_pages = ["pricing", "wedding-limo", "prom-limo", "quinceanera-limo", "corporate-transportation", "airport-iah", "airport-hobby", "airport-24-7-service", "black-car-service", "chauffeur-service", "party-bus", "event-transportation", "bachelorette-party", "galveston-cruise-transport", "wine-tours", "new-years-eve-limo"]
-        fleet_pages = ["fleet/mercedes-s-class", "fleet/cadillac-escalade", "fleet/mercedes-sprinter"]
-        loc_pages = ["locations/galveston"]
-        blog_urls = "\n".join(f'<url><loc>https://avalimo.net/blog/{p["slug"]}</loc><lastmod>{_today}</lastmod><changefreq>weekly</changefreq><priority>0.6</priority></url>' for p in BLOG_POSTS if p.get("slug"))
-        urls = "\n".join(f'<url><loc>https://avalimo.net/{p}</loc><lastmod>{_today}</lastmod><changefreq>{"daily" if p == "" else "weekly"}</changefreq><priority>{"1.0" if p == "" else "0.8"}</priority></url>' for p in pages)
-        seo_urls = "\n".join(f'<url><loc>https://avalimo.net/{p}</loc><lastmod>{_today}</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>' for p in seo_pages)
-        fleet_urls = "\n".join(f'<url><loc>https://avalimo.net/{p}</loc><lastmod>{_today}</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>' for p in fleet_pages)
-        loc_urls = "\n".join(f'<url><loc>https://avalimo.net/{p}</loc><lastmod>{_today}</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>' for p in loc_pages)
+        home = '<url><loc>https://avalimo.net/</loc><lastmod>{}</lastmod><changefreq>daily</changefreq><priority>1.0</priority></url>'.format(_today)
+        policy = '<url><loc>https://avalimo.net/policy</loc><lastmod>{}</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>'.format(_today)
+        blog_urls = "\n".join(f'<url><loc>https://avalimo.net/blog/{p["slug"]}</loc><lastmod>{_today}</lastmod><changefreq>weekly</changefreq><priority>0.6</priority></url>' for p in sorted(BLOG_POSTS, key=_post_date_key, reverse=True) if p.get("slug"))
         xml = f'''<?xml version="1.0" encoding="UTF-8"?>
     <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-    {urls}
-    {seo_urls}
-    {fleet_urls}
-    {loc_urls}
+    {home}
     {blog_urls}
+    {policy}
     </urlset>'''
         return xml, 200, {"Content-Type": "application/xml"}
 

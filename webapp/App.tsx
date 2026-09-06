@@ -45,6 +45,14 @@ function App() {
     }
     if (query.includes('dispatch=true') || window.location.hash.includes('dispatch')) {
       setCurrentPage('review-dispatcher');
+      return;
+    }
+    // Landing on /#<section> (e.g. from a 301 of an old landing page) -> scroll there
+    const hash = window.location.hash.replace(/^#/, '');
+    if (hash && hash !== 'dispatch') {
+      const scrollTo = () => document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth' });
+      setTimeout(scrollTo, 250);
+      setTimeout(scrollTo, 700);
     }
   }, []);
 

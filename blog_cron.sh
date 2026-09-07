@@ -1,33 +1,37 @@
 #!/usr/bin/env bash
-# AvaLimo Daily Blog Cron Script
-# Place this in your Coolify scheduler or run via crontab on the host.
-# It lives alongside auto_blog.py in the repo root.
+# AvaLimo daily blog publisher. Host cron is the single scheduler.
 
 set -euo pipefail
 
-# Use the script's directory so paths resolve correctly inside Docker containers
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
-
 LOG_FILE="${SCRIPT_DIR}/blog_cron.log"
+LOCK_FILE="/tmp/avalimo-blog-publisher.lock"
 
-# Load BAI_API_KEY from .env
-if [ -f "${SCRIPT_DIR}/.env" ]; then
-  set -a; . "${SCRIPT_DIR}/.env"; set +a
+exec 9>"$LOCK_FILE"
+if ! flock -n 9; then
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] Another publisher is running; skipping." >> "$LOG_FILE"
+  exit 0
 fi
 
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting blog cron..." >> "$LOG_FILE"
+cd "$SCRIPT_DIR"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting blog publisher..." >> "$LOG_FILE"
 
-# Check if b.ai is reachable
-if ! curl -sf --max-time 10 -o /dev/null "https://api.b.ai/v1/models" -H "Authorization: Bearer ${BAI_API_KEY}"; then
-  echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: b.ai API is not reachable or key invalid. Skipping." >> "$LOG_FILE"
+if [[ -n "$(git status --porcelain)" ]]; then
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: repository has uncommitted changes." >> "$LOG_FILE"
   exit 1
 fi
 
-# Generate a new post
+git fetch origin main >> "$LOG_FILE" 2>&1
+git checkout main >> "$LOG_FILE" 2>&1
+git pull --rebase origin main >> "$LOG_FILE" 2>&1
+
 if python3 auto_blog.py >> "$LOG_FILE" 2>&1; then
-  echo "[$(date '+%Y-%m-%d %H:%M:%S')] SUCCESS: Blog post generated and pushed." >> "$LOG_FILE"
+  title="$(python3 -c 'import json; print(json.load(open("blog_posts.json"))[0]["title"])')"
+  git add blog_posts.json
+  git commit -m "auto blog: ${title}" >> "$LOG_FILE" 2>&1
+  git push origin HEAD:main >> "$LOG_FILE" 2>&1
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] SUCCESS: ${title}" >> "$LOG_FILE"
 else
-  echo "[$(date '+%Y-%m-%d %H:%M:%S')] FAILED: auto_blog.py returned an error." >> "$LOG_FILE"
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] FAILED: article generation failed." >> "$LOG_FILE"
   exit 1
 fi

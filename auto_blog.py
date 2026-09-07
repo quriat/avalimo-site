@@ -1,94 +1,118 @@
 #!/usr/bin/env python3
-"""Auto-generate a daily blog post using b.ai (Qwen) and push to GitHub."""
-import json, os, subprocess, sys, re
+"""Generate one useful AvaLimo article and update blog_posts.json atomically."""
+
+import json
+import os
+import re
+import tempfile
+import time
+import urllib.error
+import urllib.request
 from datetime import date
 
-BAI_URL = "https://api.b.ai/v1/chat/completions"
-MODEL = "qwen3.8-flash"
+
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://168.231.74.172:32792/api/chat")
+MODELS = [
+    name.strip()
+    for name in os.getenv(
+        "OLLAMA_MODELS",
+        "deepseek-v4-flash:cloud,qwen3.5:cloud,minimax-m3:cloud",
+    ).split(",")
+    if name.strip()
+]
 REPO_DIR = os.path.dirname(os.path.abspath(__file__))
 BLOG_FILE = os.path.join(REPO_DIR, "blog_posts.json")
 
 CATEGORIES = ["Airport Travel", "Travel Tips", "Weddings", "Corporate", "Events", "Fleet"]
-EMOJIS = {"Airport Travel": "&#9992;", "Travel Tips": "&#127542;", "Weddings": "&#128141;", "Corporate": "&#127963;", "Events": "&#127796;", "Fleet": "&#128664;"}
+EMOJIS = {
+    "Airport Travel": "&#9992;",
+    "Travel Tips": "&#127542;",
+    "Weddings": "&#128141;",
+    "Corporate": "&#127963;",
+    "Events": "&#127796;",
+    "Fleet": "&#128664;",
+}
 
 
-def _load_env():
-    env_path = os.path.join(REPO_DIR, ".env")
-    if os.path.exists(env_path):
-        with open(env_path) as f:
-            for line in f:
-                line = line.strip()
-                if line and not line.startswith("#") and "=" in line:
-                    k, _, v = line.partition("=")
-                    os.environ.setdefault(k.strip(), v.strip())
-
-
-def _make_slug(title):
-    slug = title.lower().strip()
-    slug = re.sub(r"[^a-z0-9\s-]", "", slug)
-    slug = re.sub(r"\s+", "-", slug)
-    slug = re.sub(r"-+", "-", slug)
-    return slug.strip("-")[:80]
-
-
-def _extract_json(text):
+def _extract_json(text: str) -> dict:
+    """Accept raw JSON or a fenced/prefixed JSON object from a model."""
     text = text.strip()
-    text = re.sub(r"^```(?:json)?|```$", "", text, flags=re.MULTILINE).strip()
-    start, end = text.find("{"), text.rfind("}")
-    if start != -1 and end != -1:
-        text = text[start:end + 1]
-    return json.loads(text)
+    text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text, flags=re.I)
+    start = text.find("{")
+    if start < 0:
+        raise ValueError("model response did not contain a JSON object")
+    value, _ = json.JSONDecoder().raw_decode(text[start:])
+    if not isinstance(value, dict):
+        raise ValueError("model response was not a JSON object")
+    return value
 
 
-def generate_post(post_date=None):
-    _load_env()
-    api_key = os.environ.get("BAI_API_KEY", "")
-    if not api_key:
-        raise SystemExit("BAI_API_KEY not set — add it to .env")
+def _request_post(model: str, category: str, today: str) -> dict:
+    prompt = f"""Write one original, people-first AvaLimo article for Houston travelers.
+Category: {category}
+Length: 650-900 words.
 
-    post_date = post_date or date.today().isoformat()
-    cat = CATEGORIES[date.fromisoformat(post_date).toordinal() % len(CATEGORIES)]
-    prompt = f'''Write a short Houston limo blog post (~200 words) in the "{cat}" category.
-Return ONLY valid JSON with these exact keys: title, summary, content (HTML paragraphs), date (use exactly "{post_date}"), read (e.g. "3 min read").
-No markdown, no explanation, no backticks --- just raw JSON.'''
+Requirements:
+- Give practical, Houston-specific advice based on stable facts (IAH, Hobby, Houston traffic, luggage, pickup planning, group size, accessibility, or event logistics as relevant).
+- Do not invent customer counts, awards, exact travel times, live events, vehicle features, prices, licenses, reviews, or safety claims.
+- Use a descriptive title, a concise summary, and useful HTML with <p>, <h2>, <ul>, and <li> tags.
+- Add one natural link to /book and one relevant link to /services, /fleet, /pricing, or /contact.
+- End with a helpful booking call to action, not keyword stuffing.
+- Avoid repeating generic phrases such as "arrive in style" or "ultimate luxury."
 
-    import urllib.request
-    body = json.dumps({
-        "model": MODEL,
-        "messages": [{"role": "user", "content": prompt}],
-        "stream": False,
-        "temperature": 0.8,
-    }).encode()
-    req = urllib.request.Request(BAI_URL, data=body, headers={
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {api_key}",
-    })
-    resp = json.loads(urllib.request.urlopen(req, timeout=120).read())
-    post = _extract_json(resp["choices"][0]["message"]["content"])
-    post["emoji"] = EMOJIS[cat]
-    post["cat"] = cat
-    post["date"] = post_date
-    if "slug" not in post or not post["slug"]:
-        post["slug"] = _make_slug(post.get("title", ""))
-    return post
+Return ONLY valid JSON with these exact keys:
+title, summary, content, date ("{today}"), read (for example "5 min read").
+No markdown fences or explanation."""
+    body = json.dumps(
+        {"model": model, "messages": [{"role": "user", "content": prompt}], "stream": False}
+    ).encode()
+    req = urllib.request.Request(OLLAMA_URL, data=body, headers={"Content-Type": "application/json"})
+    response = json.loads(urllib.request.urlopen(req, timeout=180).read())
+    if response.get("error"):
+        raise RuntimeError(response["error"])
+    return _extract_json(response["message"]["content"])
 
 
-def main():
-    post_date = None
-    if "--date" in sys.argv:
-        post_date = sys.argv[sys.argv.index("--date") + 1]
+def generate_post() -> dict:
+    category = CATEGORIES[date.today().toordinal() % len(CATEGORIES)]
+    today = date.today().isoformat()
+    errors = []
+    for index, model in enumerate(MODELS):
+        try:
+            post = _request_post(model, category, today)
+            for field in ("title", "summary", "content", "date", "read"):
+                if not isinstance(post.get(field), str) or not post[field].strip():
+                    raise ValueError(f"missing or invalid field: {field}")
+            post["date"] = today
+            post["emoji"] = EMOJIS[category]
+            post["cat"] = category
+            post["slug"] = re.sub(r"[^a-z0-9]+", "-", post["title"].lower()).strip("-")
+            return post
+        except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, ValueError, KeyError, RuntimeError) as exc:
+            errors.append(f"{model}: {exc}")
+            if index + 1 < len(MODELS):
+                time.sleep(10)
+    raise RuntimeError("all blog models failed: " + " | ".join(errors))
 
-    posts = json.load(open(BLOG_FILE))
-    new = generate_post(post_date)
-    if any(p.get("slug") == new["slug"] for p in posts):
-        print(f"Skipped: {new['title']} (already posted)")
-        return
+
+def main() -> None:
+    with open(BLOG_FILE, encoding="utf-8") as source:
+        posts = json.load(source)
+    new = generate_post()
+    if any(post.get("slug") == new["slug"] for post in posts):
+        new["slug"] = f'{new["slug"]}-{new["date"]}'
     posts.insert(0, new)
-    json.dump(posts, open(BLOG_FILE, "w"), indent=2, ensure_ascii=False)
-    subprocess.run(["git", "-C", REPO_DIR, "add", "blog_posts.json"], check=True)
-    subprocess.run(["git", "-C", REPO_DIR, "commit", "-m", f"auto blog: {new['title']}"], check=True)
-    subprocess.run(["git", "-C", REPO_DIR, "push"], check=True)
-    print(f"Posted: {new['title']}")
+
+    fd, temporary_path = tempfile.mkstemp(prefix="blog-posts-", suffix=".json", dir=REPO_DIR)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as target:
+            json.dump(posts, target, indent=2, ensure_ascii=False)
+            target.write("\n")
+        os.replace(temporary_path, BLOG_FILE)
+    finally:
+        if os.path.exists(temporary_path):
+            os.unlink(temporary_path)
+    print(f'Generated: {new["title"]}')
 
 
 if __name__ == "__main__":

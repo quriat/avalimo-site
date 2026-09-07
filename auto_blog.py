@@ -4,6 +4,7 @@
 import json
 import os
 import re
+import sys
 import tempfile
 import time
 import urllib.error
@@ -73,17 +74,17 @@ No markdown fences or explanation."""
     return _extract_json(response["message"]["content"])
 
 
-def generate_post() -> dict:
-    category = CATEGORIES[date.today().toordinal() % len(CATEGORIES)]
-    today = date.today().isoformat()
+def generate_post(post_date=None) -> dict:
+    post_date = post_date or date.today().isoformat()
+    category = CATEGORIES[date.fromisoformat(post_date).toordinal() % len(CATEGORIES)]
     errors = []
     for index, model in enumerate(MODELS):
         try:
-            post = _request_post(model, category, today)
+            post = _request_post(model, category, post_date)
             for field in ("title", "summary", "content", "date", "read"):
                 if not isinstance(post.get(field), str) or not post[field].strip():
                     raise ValueError(f"missing or invalid field: {field}")
-            post["date"] = today
+            post["date"] = post_date
             post["emoji"] = EMOJIS[category]
             post["cat"] = category
             post["slug"] = re.sub(r"[^a-z0-9]+", "-", post["title"].lower()).strip("-")
@@ -96,9 +97,19 @@ def generate_post() -> dict:
 
 
 def main() -> None:
+    post_date = None
+    if "--date" in sys.argv:
+        post_date = sys.argv[sys.argv.index("--date") + 1]
+    post_date = post_date or date.today().isoformat()
+
     with open(BLOG_FILE, encoding="utf-8") as source:
         posts = json.load(source)
-    new = generate_post()
+    # Idempotent per date: re-running for an existing date is a no-op so
+    # daily cron + backfill loops can safely overlap.
+    if any(str(post.get("date", ""))[:10] == post_date for post in posts):
+        print(f"Already posted for {post_date}. Nothing to do.")
+        return
+    new = generate_post(post_date)
     if any(post.get("slug") == new["slug"] for post in posts):
         new["slug"] = f'{new["slug"]}-{new["date"]}'
     posts.insert(0, new)

@@ -18,8 +18,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # The site deploys from `main` (Coolify builds this branch). Schedules
-          # only fire on the default branch (`staging`), so always work on main.
+          # The site deploys from `main`, which is also the default branch,
+          # so scheduled runs fire correctly here. Always work on main.
           ref: main
           fetch-depth: 0
       - uses: actions/setup-python@v5
@@ -31,20 +31,40 @@ jobs:
           BLOG_PAT: ${{ secrets.BLOG_GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          # A PAT (BLOG_GITHUB_TOKEN) also triggers the docker-build workflow;
-          # GITHUB_TOKEN is fine for the site itself — Coolify's GitHub App
-          # webhook rebuilds the site on any push to main.
+          # auto_blog.py only writes blog_posts.json (no git ops, no API key
+          # needed — the Ollama endpoint + model fallback chain have defaults).
+          # This job commits + pushes. A PAT (BLOG_GITHUB_TOKEN) also triggers
+          # the docker-build workflow; GITHUB_TOKEN is fine for the site itself
+          # — Coolify's GitHub App webhook rebuilds the site on any push to main.
           PUSH_TOKEN="${BLOG_PAT:-$GH_TOKEN}"
           git config user.name "AvaLimo Blog Bot"
           git config user.email "bot@avalimo.net"
           git remote set-url origin "https://x-access-token:${PUSH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          for attempt in 1 2 3; do
-            if python3 auto_blog.py; then
-              echo "Blog post generated and pushed."
-              exit 0
-            fi
-            echo "Attempt ${attempt}/3 failed; retrying in 60s..."
-            sleep 60
+          # Backfill any missed days from the last 7 days, then today's post.
+          # auto_blog.py is idempotent per date, so re-running is safe.
+          FAILED=0
+          for offset in 7 6 5 4 3 2 1 0; do
+            D=$(date -u -d "$offset days ago" +%F)
+            echo "=== Ensuring post for $D ==="
+            ok=0
+            for attempt in 1 2 3; do
+              if python3 auto_blog.py --date "$D"; then
+                ok=1
+                break
+              fi
+              echo "Attempt ${attempt}/3 failed for $D; retrying in 60s..."
+              sleep 60
+            done
+            [ "$ok" = "1" ] || FAILED=1
           done
-          echo "All attempts failed." >&2
-          exit 1
+          if [ -z "$(git status --porcelain -- blog_posts.json)" ]; then
+            echo "Nothing new to publish."
+            [ "$FAILED" = "0" ]
+            exit $?
+          fi
+          git add blog_posts.json
+          git commit -m "auto blog: $(python3 -c 'import json; print(json.load(open("blog_posts.json"))[0]["title"])')"
+          git pull --rebase
+          git push
+          echo "Blog post(s) published."
+          [ "$FAILED" = "0" ]

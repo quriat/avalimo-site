@@ -256,17 +256,33 @@ def og_image():
 
 @app.route("/sitemap.xml")
 def sitemap_xml():
-        # Clean sitemap: only URLs that serve the new SPA design and return 200.
-        # Old landing pages now 301 to SPA sections, so they are intentionally excluded.
+        # Hybrid sitemap: SPA homepage + blog + Flask old-design landing pages.
+        # Every URL listed here returns 200 (Flask renders PAGE_META/PAGE_CONTENT).
         _today = _dt.date.today().isoformat()
         home = '<url><loc>https://avalimo.net/</loc><lastmod>{}</lastmod><changefreq>daily</changefreq><priority>1.0</priority></url>'.format(_today)
-        policy = '<url><loc>https://avalimo.net/policy</loc><lastmod>{}</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>'.format(_today)
+        # Static Flask pages (nav + legal + payment)
+        _static_slugs = ["services", "fleet", "book", "contact", "faq",
+                         "flight-status", "deposit", "policy", "pricing"]
+        # Rich SEO landing pages from page_content.json (old design, still rendered)
+        _landing_slugs = sorted(set(PAGE_CONTENT.keys()) | set(
+            s for s in PAGE_META.keys() if s and s != "blog"))
+        _seen = set()
+        _page_urls = []
+        for slug in _static_slugs + _landing_slugs:
+            if not slug or slug in _seen or slug == "blog":
+                continue
+            _seen.add(slug)
+            _page_urls.append(
+                f'<url><loc>https://avalimo.net/{slug}</loc>'
+                f'<lastmod>{_today}</lastmod><changefreq>weekly</changefreq>'
+                f'<priority>0.8</priority></url>')
+        _page_urls_str = "\n".join(_page_urls)
         blog_urls = "\n".join(f'<url><loc>https://avalimo.net/blog/{p["slug"]}</loc><lastmod>{_today}</lastmod><changefreq>weekly</changefreq><priority>0.6</priority></url>' for p in sorted(BLOG_POSTS, key=_post_date_key, reverse=True) if p.get("slug"))
         xml = f'''<?xml version="1.0" encoding="UTF-8"?>
     <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     {home}
+    {_page_urls_str}
     {blog_urls}
-    {policy}
     </urlset>'''
         return xml, 200, {"Content-Type": "application/xml"}
 
@@ -274,6 +290,10 @@ def sitemap_xml():
 @app.route("/", defaults={"path": ""})
 @app.route("/<path:path>")
 def index(path):
+    # Normalize trailing slash so /pricing/ serves the same as /pricing
+    # (nginx hybrid proxies both forms to Flask).
+    if path and path != "/" and path.endswith("/"):
+        path = path.rstrip("/")
     meta = None
     featured_post = None
     page_h1 = 'Houston\'s Finest <span class="gold">Limo Service</span>'

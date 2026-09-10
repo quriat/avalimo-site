@@ -661,16 +661,16 @@ async function handleDeposit(e) {
     <!-- ===== HERO ===== -->
     <section class="hero" id="home">
         <p class="hero-subtitle">Houston's Premium Chauffeur Service</p>
-        <h1>Arrive in <em>absolute</em> luxury.</h1>
-        <p class="hero-desc">Airport transfers, corporate travel, weddings and nights out. Flat rates, zero surge, always on time.</p>
+        <h1>Your flight lands. <em>We're already there.</em></h1>
+        <p class="hero-desc">Real-time flight tracking, meet & greet at the gate, and a flat rate locked in before you land. No surge. No surprises. Just a black car waiting when you step out.</p>
         <div class="hero-buttons">
-            <a href="#quote" class="btn-gold">Reserve Your Car</a>
-            <a href="#fleet" class="btn-outline">View the Fleet</a>
+            <a href="#quote" class="btn-gold">Get Your Flat Rate →</a>
+            <a href="#fleet" class="btn-outline">See the Fleet</a>
         </div>
         <div class="hero-stats">
             <div class="hero-stat"><h3>5.0</h3><p>Google Rating</p></div>
             <div class="hero-stat"><h3>500+</h3><p>Rides Completed</p></div>
-            <div class="hero-stat"><h3>24/7</h3><p>Available</p></div>
+            <div class="hero-stat"><h3>24/7</h3><p>Dispatch</p></div>
         </div>
         <div class="scroll-line"></div>
     </section>
@@ -679,10 +679,15 @@ async function handleDeposit(e) {
     <section class="quote-section" id="quote">
         <div class="quote-grid">
             <div class="reveal">
-                <p class="section-label">Request Your Quote</p>
-                <h2 class="section-title">A flat rate, sent in minutes.</h2>
-                <p class="section-desc">Never a surge. Tell us where you're going and we'll respond with a transparent price — no hidden fees, no surprises.</p>
-                <p style="margin-top: 35px; color: rgba(255,255,255,0.9); font-size: 0.9rem;">Or call dispatch anytime:</p>
+                <p class="section-label">Get Your Quote</p>
+                <h2 class="section-title">See your price in 60 seconds.</h2>
+                <p class="section-desc">Tell us where you're going. We'll text you a flat rate — no surge, no hidden fees, no surprises. Lock in your price before you book.</p>
+                <div style="margin-top: 35px; padding: 20px; background: rgba(201,168,76,0.05); border: 1px solid rgba(201,168,76,0.1); border-radius: 4px;">
+                    <p style="color: rgba(255,255,255,0.9); font-size: 0.85rem; margin-bottom: 12px;"><strong style="color: var(--gold);">✓ No surge pricing</strong> — ever</p>
+                    <p style="color: rgba(255,255,255,0.9); font-size: 0.85rem; margin-bottom: 12px;"><strong style="color: var(--gold);">✓ Free cancellation</strong> — up to 24 hours before</p>
+                    <p style="color: rgba(255,255,255,0.9); font-size: 0.85rem;"><strong style="color: var(--gold);">✓ Flight tracking included</strong> — we wait if you're delayed</p>
+                </div>
+                <p style="margin-top: 25px; color: rgba(255,255,255,0.9); font-size: 0.9rem;">Or call dispatch anytime:</p>
                 <p style="font-family: var(--serif); font-size: 2rem; color: var(--gold); margin-top: 10px;">(832) 917-6331</p>
             </div>
             <form class="quote-form reveal" onsubmit="handleQuote(event)">
@@ -708,8 +713,8 @@ async function handleDeposit(e) {
                         </select>
                     </div>
                 </div>
-                <button type="submit" class="form-submit">Request My Quote</button>
-                <p class="form-note">Already booked? <a href="/deposit">Pay your deposit →</a></p>
+                <button type="submit" class="form-submit">See My Price →</button>
+                <p class="form-note">No credit card required. <a href="/deposit">Already booked? Pay your deposit →</a></p>
             </form>
         </div>
     </section>
@@ -719,7 +724,7 @@ async function handleDeposit(e) {
         <div class="section-header center reveal">
             <p class="section-label">The Fleet</p>
             <h2 class="section-title">Three ways to travel well.</h2>
-            <p class="section-desc">Every vehicle is meticulously maintained, immaculately cleaned, and ready before you are.</p>
+            <p class="section-desc">Every vehicle meticulously maintained, immaculately cleaned, and ready before you are. Choose your ride.</p>
             <div class="gold-line"></div>
         </div>
         <div class="fleet-grid">
@@ -729,8 +734,8 @@ async function handleDeposit(e) {
                     <div class="fleet-number">01</div>
                     <h3>Mercedes S-Class</h3>
                     <p class="fleet-type">Executive Sedan &bull; Up to 3 passengers</p>
-                    <p>Whisper-quiet cabin, leather seating and ambient light. The pick for airport runs and corporate travel.</p>
-                    <a href="/book" class="fleet-btn">Book</a>
+                    <p>Whisper-quiet cabin, leather seating and ambient light. The pick for airport runs and corporate travel when impressions matter.</p>
+                    <a href="/book" class="fleet-btn">Book This Ride</a>
                 </div>
             </div>
             <div class="fleet-card reveal">
@@ -739,8 +744,8 @@ async function handleDeposit(e) {
                     <div class="fleet-number">02</div>
                     <h3>Cadillac Escalade</h3>
                     <p class="fleet-type">Luxury SUV &bull; Up to 6 passengers</p>
-                    <p>Spacious, powerful, loaded with amenities. Ideal for groups, families and VIP transfers.</p>
-                    <a href="/book" class="fleet-btn">Book</a>
+                    <p>Spacious, powerful, loaded with amenities. Ideal for groups, families and VIP transfers. Our most popular choice.</p>
+                    <a href="/book" class="fleet-btn">Book This Ride</a>
                 </div>
             </div>
             <div class="fleet-card reveal">
@@ -749,8 +754,8 @@ async function handleDeposit(e) {
                     <div class="fleet-number">03</div>
                     <h3>Mercedes Sprinter</h3>
                     <p class="fleet-type">Group Van &bull; Up to 14 passengers</p>
-                    <p>High ceilings, reclining seats and a premium sound system. Weddings, tours and big group nights out.</p>
-                    <a href="/book" class="fleet-btn">Book</a>
+                    <p>High ceilings, reclining seats and a premium sound system. Weddings, tours and big group nights out — everyone rides together.</p>
+                    <a href="/book" class="fleet-btn">Book This Ride</a>
                 </div>
             </div>
         </div>
@@ -765,12 +770,12 @@ async function handleDeposit(e) {
             <div class="gold-line"></div>
         </div>
         <div class="services-grid">
-            <div class="service-card reveal"><div class="service-icon">✈️</div><h4>Airport Transfers</h4><p>IAH & Hobby with real-time flight tracking, meet & greet, and luggage help.</p></div>
-            <div class="service-card reveal"><div class="service-icon">💼</div><h4>Corporate Travel</h4><p>Punctual, professional chauffeurs for meetings and client entertainment.</p></div>
-            <div class="service-card reveal"><div class="service-icon">💍</div><h4>Weddings</h4><p>White-glove service and photo-worthy arrivals for your biggest day.</p></div>
-            <div class="service-card reveal"><div class="service-icon">🎬</div><h4>Concerts & Events</h4><p>Toyota Center, NRG, 713 Music Hall. Skip the parking, we'll be waiting.</p></div>
-            <div class="service-card reveal"><div class="service-icon">🎵</div><h4>Nights Out & Parties</h4><p>BYOB Sprinters and party vans for the bride tribe and group nights.</p></div>
-            <div class="service-card reveal"><div class="service-icon">🍷</div><h4>Wine & Brewery Tours</h4><p>Hill Country wineries and Houston breweries, safe and fully custom.</p></div>
+            <div class="service-card reveal"><div class="service-icon">✈️</div><h4>Airport Transfers</h4><p>IAH & Hobby with real-time flight tracking. We monitor your flight and adjust — even if you're delayed. Meet & greet at the gate.</p></div>
+            <div class="service-card reveal"><div class="service-icon">💼</div><h4>Corporate Travel</h4><p>Punctual, professional chauffeurs for meetings and client entertainment. Your team arrives on time, every time.</p></div>
+            <div class="service-card reveal"><div class="service-icon">💍</div><h4>Weddings</h4><p>White-glove service and photo-worthy arrivals for your biggest day. Coordinated with your wedding planner.</p></div>
+            <div class="service-card reveal"><div class="service-icon">🎬</div><h4>Concerts & Events</h4><p>Toyota Center, NRG, 713 Music Hall. Skip the parking, we'll be waiting when the show ends.</p></div>
+            <div class="service-card reveal"><div class="service-icon">🎵</div><h4>Nights Out & Parties</h4><p>BYOB Sprinters and party vans for the bride tribe and group nights. Everyone stays together, everyone gets home safe.</p></div>
+            <div class="service-card reveal"><div class="service-icon">🍷</div><h4>Wine & Brewery Tours</h4><p>Hill Country wineries and Houston breweries. No designated driver needed — just good company and great wine.</p></div>
         </div>
     </section>
 
@@ -785,21 +790,21 @@ async function handleDeposit(e) {
         <div class="testimonials-grid">
             <div class="testimonial-card reveal">
                 <div class="testimonial-stars">★★★★★</div>
-                <blockquote>"Everything was perfect, from booking to arrival. The vehicle was immaculate and the driver was professional and courteous. Will definitely use again."</blockquote>
+                <blockquote>"My flight was delayed 2 hours. They tracked it and adjusted. Driver was waiting when I landed at 1 AM. That's service."</blockquote>
                 <p class="testimonial-author">David M.</p>
-                <p class="testimonial-role">Airport Transfer</p>
+                <p class="testimonial-role">IAH Airport Transfer</p>
             </div>
             <div class="testimonial-card reveal">
                 <div class="testimonial-stars">★★★★★</div>
-                <blockquote>"Best airport transfer I've ever had. My flight was delayed and they were still waiting when I landed. So glad I found AvaLimo."</blockquote>
+                <blockquote>"Booked for my wife's birthday dinner. The S-Class was spotless, driver opened the door, even had water waiting. She felt like a celebrity."</blockquote>
                 <p class="testimonial-author">Jennifer K.</p>
-                <p class="testimonial-role">IAH Pickup</p>
+                <p class="testimonial-role">Night Out</p>
             </div>
             <div class="testimonial-card reveal">
                 <div class="testimonial-stars">★★★★★</div>
-                <blockquote>"Used them for our wedding, absolutely perfect. The S-Class was stunning and the chauffeur helped with everything."</blockquote>
+                <blockquote>"Used them for our wedding. The Sprinter fit the whole bridal party. Driver coordinated with our planner and was 10 minutes early. Perfect."</blockquote>
                 <p class="testimonial-author">Michael & Sarah T.</p>
-                <p class="testimonial-role">Wedding</p>
+                <p class="testimonial-role">Wedding Transportation</p>
             </div>
         </div>
     </section>
@@ -848,12 +853,12 @@ async function handleDeposit(e) {
             <div class="gold-line"></div>
         </div>
         <div class="faq-container reveal">
-            <div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">How do I book a ride? <span class="icon">+</span></button><div class="faq-answer"><p>Use the quote form above, call (832) 917-6331 (AI) or (832) 567-8050 (dispatch), or email adam@avalimo.net. Online is fastest — we confirm within minutes.</p></div></div>
-            <div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">Do you cover both IAH and Hobby? <span class="icon">+</span></button><div class="faq-answer"><p>Yes, both airports plus Sugar Land, The Woodlands, Katy, Missouri City, Pearland, Galveston, League City, Baytown, Spring and Cypress.</p></div></div>
-            <div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">Do you track flights? <span class="icon">+</span></button><div class="faq-answer"><p>Always. We monitor your flight in real time so we're there when you land, early or delayed, at no extra charge.</p></div></div>
-            <div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">How is pricing calculated? <span class="icon">+</span></button><div class="faq-answer"><p>Transparent flat rates based on vehicle, distance and duration. Zero surge fees. Request a quote and we'll respond in minutes.</p></div></div>
-            <div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">Can I cancel or change my booking? <span class="icon">+</span></button><div class="faq-answer"><p>Yes. Cancel or modify up to 24 hours before pickup for a full refund. Later changes may incur a fee.</p></div></div>
-            <div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">Are your drivers licensed and insured? <span class="icon">+</span></button><div class="faq-answer"><p>Every chauffeur is fully licensed, insured and professionally trained, with thorough background checks and regular vehicle inspections.</p></div></div>
+            <div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">How do I book a ride? <span class="icon">+</span></button><div class="faq-answer"><p>Use the quote form above — it's the fastest way. We'll text you a flat rate within 60 seconds. Or call (832) 917-6331 (AI assistant) or (832) 567-8050 (live dispatch). Email adam@avalimo.net works too.</p></div></div>
+            <div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">Do you cover both IAH and Hobby? <span class="icon">+</span></button><div class="faq-answer"><p>Yes, both airports plus Sugar Land, The Woodlands, Katy, Missouri City, Pearland, Galveston, League City, Baytown, Spring and Cypress. If you're in Greater Houston, we've got you.</p></div></div>
+            <div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">What if my flight is delayed? <span class="icon">+</span></button><div class="faq-answer"><p>We track every flight in real time. If you're early or delayed, we adjust automatically — no extra charge, no phone call needed. Your driver will be there when you land.</p></div></div>
+            <div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">How is pricing calculated? <span class="icon">+</span></button><div class="faq-answer"><p>Transparent flat rates based on vehicle, distance and duration. No surge pricing, ever. Request a quote and we'll respond with an exact price — what you see is what you pay.</p></div></div>
+            <div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">Can I cancel or change my booking? <span class="icon">+</span></button><div class="faq-answer"><p>Yes. Cancel or modify up to 24 hours before pickup for a full refund. Plans change — we get it.</p></div></div>
+            <div class="faq-item"><button class="faq-question" onclick="toggleFaq(this)">Are your drivers licensed and insured? <span class="icon">+</span></button><div class="faq-answer"><p>Every chauffeur is fully licensed, insured and professionally trained, with thorough background checks and regular vehicle inspections. Your safety is non-negotiable.</p></div></div>
         </div>
     </section>
 
@@ -861,11 +866,11 @@ async function handleDeposit(e) {
     <section class="cta-section" id="payment">
         <div class="reveal">
             <p class="section-label">Ready When You Are</p>
-            <h2>Book online in 30 seconds.</h2>
-            <p>Two lines, always answered. Talk to our AI assistant or reach dispatch directly, day or night.</p>
+            <h2>Your ride is 60 seconds away.</h2>
+            <p>Two ways to book: get a quote online or call dispatch directly. Flat rate, no surprises.</p>
             <div class="cta-buttons">
-                <a href="#quote" class="btn-gold">Start a Booking</a>
-                <a href="mailto:adam@avalimo.net" class="btn-outline">Email Us</a>
+                <a href="#quote" class="btn-gold">Get Your Quote →</a>
+                <a href="tel:8325678050" class="btn-outline">Call (832) 567-8050</a>
             </div>
             <div class="cta-cards">
                 <div class="cta-card"><div class="cta-icon">🤖</div><h4>AI Assistant</h4><p><a href="tel:8329176331">(832) 917-6331</a></p></div>
